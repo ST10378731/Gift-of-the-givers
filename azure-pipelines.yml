@@ -1,0 +1,31 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: 'windows-latest'
+
+variables:
+  buildConfiguration: 'Release'
+  webAppName: 'DisasterAlleviationWebApp'   
+steps:
+- task: UseDotNet@2
+  inputs:
+    packageType: 'sdk'
+    version: '8.0.x'
+
+- script: dotnet restore
+  displayName: 'Restore Packages'
+
+- script: dotnet build --configuration $(buildConfiguration)
+  displayName: 'Build Project'
+
+- script: dotnet publish -c $(buildConfiguration) -o $(Build.ArtifactStagingDirectory)/publish
+  displayName: 'Publish Project'
+
+- task: AzureWebApp@1
+  inputs:
+    azureSubscription: '$(azureSubscription)'  # <-- Replace with the name of your Azure DevOps Service Connection
+    appName: '$(webAppName)'
+    package: '$(Build.ArtifactStagingDirectory)/publish'
